@@ -268,8 +268,14 @@ body::before{
       const b = pixels[i + 2];
       const avg = (r + g + b) / 3;
       const spread = Math.max(r, g, b) - Math.min(r, g, b);
-      if(avg > 238 && spread < 24){
+      if(avg > 246 && spread < 18){
         pixels[i + 3] = 0;
+      } else if(avg > 220 && spread < 32){
+        const fade = Math.max(0, Math.min(1, (246 - avg) / 26));
+        pixels[i + 3] = Math.round(pixels[i + 3] * fade);
+        pixels[i] = Math.round(r * fade);
+        pixels[i + 1] = Math.round(g * fade);
+        pixels[i + 2] = Math.round(b * fade);
       }
     }
     spriteCtx.putImageData(imageData, 0, 0);
