@@ -1,0 +1,46 @@
+Attached Element Context from Integrated Browser
+
+Element: canvas#game
+
+URL: http://localhost:3000/
+
+HTML Path: canvas#game
+
+Outer HTML:
+```html
+<canvas id="game" width="900" height="500"></canvas>
+```
+
+Dimensions:
+- top: 0px
+- left: 0px
+- width: 900px
+- height: 500px
+
+CSS:
+```css
+canvas { display:block; margin:0 auto; background:#222; }
+
+/* Inherited */
+body { color:#fff; font-family:Arial }
+
+/* Resolved values */
+margin: 0px -100px 0px 0px;
+background-attachment: scroll;
+background-clip: border-box;
+background-color: rgb(34, 34, 34);
+background-image: none;
+background-origin: padding-box;
+background-position-x: 0%;
+background-position-y: 0%;
+background-repeat: repeat;
+background-size: auto;
+color: rgb(255, 255, 255);
+display: block;
+font-family: Arial;
+height: 500px;
+overflow-clip-margin: content-box /*UA*/;
+overflow-x: clip /*UA*/;
+overflow-y: clip /*UA*/;
+width: 900px;
+```
