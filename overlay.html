@@ -296,7 +296,7 @@ body::before{
   let betAmount = 100;
   let betChoice = null;
   let timerInt = null;
-  let countdown = 10;
+  let countdown = 25;
   let fighting = false;
   let verde, rojo, particles = [], fightInterval, animId;
 
@@ -326,7 +326,7 @@ body::before{
     betVerdeBtn.disabled = false;
     betRojoBtn.disabled = false;
     startBtn.disabled = true;
-    countdown = 10;
+    countdown = 25;
     timerEl.textContent = countdown;
     timerEl.style.color = '#fff';
     clearInterval(timerInt);
@@ -411,7 +411,7 @@ body::before{
       if(defender.hp <= 0 || attacker.hp <= 0) return;
 
       const isCrit = Math.random() < 0.1;
-      const dmg = isCrit ? 25 : Math.floor(Math.random()*8)+8;
+      const dmg = 100;
       defender.hp = Math.max(0, defender.hp - dmg);
       defender.hit = 14;
       attacker.hit = 5;
