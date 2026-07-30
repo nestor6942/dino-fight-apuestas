@@ -57,9 +57,19 @@ body::before{
   width:calc(100% - 24px);margin:8px 12px 0;
   background:#1877f2;border:2px solid #0d5bc0;color:#fff;
   font-family:inherit;font-size:8px;padding:8px;letter-spacing:0.5px;
-  border-radius:6px;cursor:not-allowed;opacity:0.75;
+  border-radius:6px;cursor:pointer;opacity:1;
   box-shadow:0 2px 0 #0a3a8a;text-shadow:0 1px 0 #000;
+  transition:transform 0.1s, box-shadow 0.2s, background 0.2s;
 }
+.fb-btn:hover{transform:translateY(-1px);box-shadow:0 4px 0 #0a3a8a}
+.fb-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #0a3a8a}
+.fb-btn.connected{background:#0d8f3e;border-color:#0a6b2d}
+.fb-status{margin:6px 12px 0;font-size:8px;color:#9edcff;letter-spacing:0.5px;text-align:center}
+.player-row{display:flex;gap:8px;align-items:center;justify-content:center;margin:8px 12px 0}
+#player-name{flex:1;background:#000;border:2px solid #444;color:#fff;font-family:inherit;font-size:8px;padding:8px;border-radius:6px}
+#player-name:focus{outline:none;border-color:var(--purple)}
+#overlay-mode-btn{background:#2b144d;border:2px solid var(--purple);color:#fff;font-family:inherit;font-size:8px;padding:8px;border-radius:6px;cursor:pointer}
+#overlay-mode-btn.active{background:#0d8f3e;border-color:#0a6b2d}
 
 .betting{
   background:linear-gradient(180deg,rgba(20,5,45,0.95),rgba(8,2,20,0.95));
@@ -174,12 +184,17 @@ body::before{
 <body>
 <div class="game-wrapper">
   <div class="topbar">
-    <div class="stat"><span>PERLAS</span><strong id="perlas">1000</strong></div>
+    <div class="stat"><span>SALDO</span><strong id="perlas">1000</strong></div>
     <div class="logo">DINO FIGHT</div>
     <div class="stat"><span>RONDA</span><strong id="ronda">1</strong></div>
   </div>
   
-  <button class="fb-btn">💙 Conectar con Facebook (próximamente)</button>
+  <button id="fb-btn" class="fb-btn" type="button">💙 Conectar con Facebook</button>
+  <div id="fb-status" class="fb-status">Estado: sin conectar</div>
+  <div class="player-row">
+    <input id="player-name" type="text" value="Jugador Demo" maxlength="20" placeholder="Tu nombre" />
+    <button id="overlay-mode-btn" type="button">Modo superposición</button>
+  </div>
 
   <div id="betting-panel" class="betting">
     <div class="countdown">APUESTAS CIERRAN EN <span id="timer">10</span>s</div>
@@ -221,6 +236,10 @@ body::before{
   const perlasEl = document.getElementById('perlas');
   const rondaEl = document.getElementById('ronda');
   const timerEl = document.getElementById('timer');
+  const fbBtn = document.getElementById('fb-btn');
+  const fbStatus = document.getElementById('fb-status');
+  const playerNameInput = document.getElementById('player-name');
+  const overlayModeBtn = document.getElementById('overlay-mode-btn');
   const betAmountInput = document.getElementById('bet-amount');
   const betVerdeBtn = document.getElementById('bet-verde');
   const betRojoBtn = document.getElementById('bet-rojo');
@@ -294,11 +313,58 @@ body::before{
   let perlas = parseInt(localStorage.getItem('df_perlas')) || 1000;
   let ronda = parseInt(localStorage.getItem('df_ronda')) || 1;
   let betAmount = 100;
+  let facebookConnected = localStorage.getItem('df_fb_connected') === 'true';
+  let facebookUser = localStorage.getItem('df_fb_user') || '';
+  let overlayMode = localStorage.getItem('df_overlay_mode') === 'true';
   let betChoice = null;
   let timerInt = null;
   let countdown = 25;
   let fighting = false;
   let verde, rojo, particles = [], fightInterval, animId;
+
+  function updateFacebookUI(){
+    fbBtn.classList.toggle('connected', facebookConnected);
+    fbBtn.textContent = facebookConnected ? '💚 Facebook conectado' : '💙 Conectar con Facebook';
+    fbStatus.textContent = facebookConnected
+      ? `Estado: conectado como ${facebookUser || 'usuario'}`
+      : 'Estado: listo para conectar';
+  }
+
+  function updateOverlayModeUI(){
+    overlayModeBtn.classList.toggle('active', overlayMode);
+    overlayModeBtn.textContent = overlayMode ? 'Modo superposición ON' : 'Modo superposición';
+    document.body.classList.toggle('overlay-active', overlayMode);
+    localStorage.setItem('df_overlay_mode', overlayMode ? 'true' : 'false');
+  }
+
+  fbBtn.addEventListener('click', () => {
+    if (!facebookConnected) {
+      facebookConnected = true;
+      facebookUser = localStorage.getItem('df_fb_user') || 'Jugador Demo';
+      localStorage.setItem('df_fb_connected', 'true');
+      localStorage.setItem('df_fb_user', facebookUser);
+    } else {
+      facebookConnected = false;
+      facebookUser = '';
+      localStorage.setItem('df_fb_connected', 'false');
+      localStorage.removeItem('df_fb_user');
+    }
+    updateFacebookUI();
+    beep(740, 90, 'triangle', 0.16);
+  });
+
+  overlayModeBtn.addEventListener('click', () => {
+    overlayMode = !overlayMode;
+    updateOverlayModeUI();
+    beep(520, 80, 'triangle', 0.14);
+  });
+
+  playerNameInput.addEventListener('input', () => {
+    const name = playerNameInput.value.trim() || 'Jugador Demo';
+    facebookUser = name;
+    localStorage.setItem('df_fb_user', name);
+    updateFacebookUI();
+  });
 
   function updateUI(){
     perlasEl.textContent = perlas.toLocaleString('es-ES');
@@ -526,12 +592,12 @@ body::before{
         const payout = Math.floor(betAmount * 1.8);
         perlas += profit;
         title = '¡VICTORIA!';
-        desc = `El DINO <b style="color:${winner==='verde'?'#00ff88':'#ff0040'}">${winner.toUpperCase()}</b> gana.<br><br>Apostaste ${betAmount} 💎<br><span style="color:#00ff88">+${payout} PERLAS</span><br><span style="opacity:0.7">Ganancia: +${profit} (x1.8)</span>`;
+        desc = `El DINO <b style="color:${winner==='verde'?'#00ff88':'#ff0040'}">${winner.toUpperCase()}</b> gana.<br><br>Apostaste ${betAmount} 💎<br><span style="color:#00ff88">+${payout} saldo</span><br><span style="opacity:0.7">Ganancia: +${profit} (x1.8)</span>`;
         winClass = 'win';
       }else{
         perlas -= betAmount;
         title = 'DERROTA';
-        desc = `El DINO <b style="color:${winner==='verde'?'#00ff88':'#ff0040'}">${winner.toUpperCase()}</b> gana.<br><br>Apostaste ${betAmount} 💎 al ${betChoice.toUpperCase()}<br><span style="color:#ff0040">-${betAmount} PERLAS</span>`;
+        desc = `El DINO <b style="color:${winner==='verde'?'#00ff88':'#ff0040'}">${winner.toUpperCase()}</b> gana.<br><br>Apostaste ${betAmount} 💎 al ${betChoice.toUpperCase()}<br><span style="color:#ff0040">-${betAmount} saldo</span>`;
         winClass = 'lose';
       }
     }else{
@@ -557,6 +623,12 @@ body::before{
   };
 
   // init
+  if (playerNameInput.value.trim()) {
+    facebookUser = playerNameInput.value.trim();
+    localStorage.setItem('df_fb_user', facebookUser);
+  }
+  updateFacebookUI();
+  updateOverlayModeUI();
   updateUI();
   drawIdle();
   startBetting();
@@ -566,5 +638,3 @@ body::before{
 <script>(function(){document.addEventListener("click",function(e){var a=e.target.closest("[data-product-id]");if(!a)return;e.preventDefault();var pid=a.getAttribute("data-product-id");if(pid)parent.postMessage({type:"ecto-artifact-link-click",productId:pid},"*")})})();</script>
 </body>
 </html>
-
-

@@ -1,3 +1,5 @@
+const assert = require('node:assert/strict');
+
 const urls = ['http://localhost:3000/', 'http://localhost:3000/overlay.html'];
 (async () => {
   let ok = true;
@@ -11,5 +13,20 @@ const urls = ['http://localhost:3000/', 'http://localhost:3000/overlay.html'];
       ok = false;
     }
   }
-  process.exit(ok ? 0 : 1);
+
+  try {
+    const res = await fetch('http://localhost:3000/overlay.html');
+    const html = await res.text();
+    assert.match(html, /id="fight-canvas"/);
+    assert.match(html, /id="fb-status"/);
+    assert.match(html, /id="player-name"/);
+    assert.match(html, /id="overlay-mode-btn"/);
+    assert.doesNotMatch(html, /let pearls = 1000;/);
+    console.log('overlay.html -> contenido de juego válido');
+  } catch (e) {
+    console.error('overlay.html -> ERROR', e.message);
+    ok = false;
+  }
+
+  process.exitCode = ok ? 0 : 1;
 })();
